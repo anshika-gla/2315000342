@@ -398,3 +398,86 @@ AND createdAt >= NOW() - INTERVAL '7 DAYS';
 5. Read Replicas
 
 These techniques reduce query latency and improve database scalability.
+
+
+# Stage 4
+
+## Problem
+
+Notifications are fetched on every page load. This creates excessive database load and poor user experience.
+
+## Solution 1: Redis Cache
+
+Store recent notifications in Redis.
+
+Flow:
+
+User → Redis → Database (if cache miss)
+
+Advantages:
+
+- Faster response time
+- Reduced DB load
+
+Trade-offs:
+
+- Extra memory usage
+- Cache invalidation complexity
+
+---
+
+## Solution 2: Pagination
+
+Instead of loading all notifications:
+
+GET /api/notifications?page=1&limit=20
+
+Advantages:
+
+- Smaller response size
+- Faster queries
+
+Trade-offs:
+
+- Additional API complexity
+
+---
+
+## Solution 3: Lazy Loading
+
+Load notifications only when user opens notification panel.
+
+Advantages:
+
+- Reduced unnecessary requests
+
+Trade-offs:
+
+- Small delay when opening panel
+
+---
+
+## Solution 4: WebSocket Push
+
+Push notifications in real time instead of polling.
+
+Advantages:
+
+- No repeated API calls
+- Real-time updates
+
+Trade-offs:
+
+- More server memory for active connections
+
+---
+
+## Recommended Approach
+
+Use:
+
+1. Redis Cache
+2. Pagination
+3. WebSockets
+
+Together these provide scalability and excellent user experience.
