@@ -258,3 +258,143 @@ VALUES(uuid_generate_v4(), 'Placement', 'CSX Corporation hiring');
 3. Table partitioning
 4. Archiving old notifications
 5. Redis caching
+
+
+
+
+
+# Stage 3
+
+## Query Analysis
+
+Given Query:
+
+```sql
+SELECT *
+FROM notifications
+WHERE studentID = 1042
+AND isRead = false
+ORDER BY createdAt ASC;
+```
+
+### Is the Query Accurate?
+
+The query is functionally correct if the notifications table stores student-specific notifications and contains the columns:
+
+- studentID
+- isRead
+- createdAt
+
+However, using `SELECT *` is not recommended because it retrieves unnecessary columns and increases I/O cost.
+
+---
+
+## Why is the Query Slow?
+
+Current Scale:
+
+- Students: 50,000
+- Notifications: 5,000,000
+
+Without proper indexing, the database performs a full table scan.
+
+Complexity:
+
+```text
+O(N)
+```
+
+Where:
+
+```text
+N = 5,000,000 rows
+```
+
+The database scans every row before filtering and sorting.
+
+---
+
+## Optimized Query
+
+```sql
+SELECT id,
+       notificationType,
+       message,
+       createdAt
+FROM notifications
+WHERE studentID = 1042
+AND isRead = false
+ORDER BY createdAt ASC;
+```
+
+---
+
+## Recommended Composite Index
+
+```sql
+CREATE INDEX idx_student_read_created
+ON notifications(studentID, isRead, createdAt);
+```
+
+Benefits:
+
+- Faster filtering by studentID
+- Faster filtering by isRead
+- Faster sorting by createdAt
+
+Expected Complexity:
+
+```text
+O(log N)
+```
+
+instead of
+
+```text
+O(N)
+```
+
+---
+
+## Should We Add Indexes on Every Column?
+
+No.
+
+Adding indexes on every column is not effective.
+
+### Problems
+
+1. Increased storage usage
+2. Slower INSERT operations
+3. Slower UPDATE operations
+4. Slower DELETE operations
+5. Unused indexes waste resources
+
+Indexes should only be created on:
+
+- Frequently filtered columns
+- Frequently sorted columns
+- Join columns
+
+---
+
+## Students Who Received Placement Notifications In Last 7 Days
+
+```sql
+SELECT DISTINCT studentID
+FROM notifications
+WHERE notificationType = 'Placement'
+AND createdAt >= NOW() - INTERVAL '7 DAYS';
+```
+
+---
+
+## Additional Scaling Improvements
+
+1. Pagination
+2. Table Partitioning
+3. Redis Caching
+4. Archiving Old Notifications
+5. Read Replicas
+
+These techniques reduce query latency and improve database scalability.
