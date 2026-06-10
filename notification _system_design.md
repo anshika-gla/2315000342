@@ -481,3 +481,186 @@ Use:
 3. WebSockets
 
 Together these provide scalability and excellent user experience.
+
+
+
+
+# Stage 5
+
+## Problems With Current Implementation
+
+Current implementation processes each student sequentially.
+
+Issues:
+
+1. Very slow for 50,000 students
+2. No retry mechanism
+3. Partial failures possible
+4. Email API latency affects overall performance
+5. Difficult recovery
+
+---
+
+## What If 200 Emails Fail?
+
+System should not stop processing.
+
+Failed email jobs should be retried automatically.
+
+---
+
+## Recommended Architecture
+
+HR
+|
+v
+Notification Service
+|
+v
+Database
+|
+v
+Message Queue (RabbitMQ/Kafka)
+|
+v
+Workers
+|
++--> Email Worker
+|
++--> Push Notification Worker
+
+---
+
+## Should DB Save And Email Happen Together?
+
+No.
+
+Database write must happen first.
+
+Once notification is stored successfully, publish an event to the queue.
+
+Workers will process email and push notifications asynchronously.
+
+This ensures reliability and fault tolerance.
+
+---
+
+## Revised Pseudocode
+
+```text
+createNotification()
+
+saveNotificationToDB()
+
+publishNotificationEvent()
+```
+
+Worker:
+
+```text
+consumeNotificationEvent()
+
+sendEmail()
+
+sendPushNotification()
+
+retryOnFailure()
+```
+
+Benefits:
+
+- High scalability
+- Retry support
+- Parallel processing
+- Fault tolerance
+
+
+
+# Stage 5
+
+## Problems With Current Implementation
+
+Current implementation processes each student sequentially.
+
+Issues:
+
+1. Very slow for 50,000 students
+2. No retry mechanism
+3. Partial failures possible
+4. Email API latency affects overall performance
+5. Difficult recovery
+
+---
+
+## What If 200 Emails Fail?
+
+System should not stop processing.
+
+Failed email jobs should be retried automatically.
+
+---
+
+## Recommended Architecture
+
+HR
+|
+v
+Notification Service
+|
+v
+Database
+|
+v
+Message Queue (RabbitMQ/Kafka)
+|
+v
+Workers
+|
++--> Email Worker
+|
++--> Push Notification Worker
+
+---
+
+## Should DB Save And Email Happen Together?
+
+No.
+
+Database write must happen first.
+
+Once notification is stored successfully, publish an event to the queue.
+
+Workers will process email and push notifications asynchronously.
+
+This ensures reliability and fault tolerance.
+
+---
+
+## Revised Pseudocode
+
+```text
+createNotification()
+
+saveNotificationToDB()
+
+publishNotificationEvent()
+```
+
+Worker:
+
+```text
+consumeNotificationEvent()
+
+sendEmail()
+
+sendPushNotification()
+
+retryOnFailure()
+```
+
+Benefits:
+
+- High scalability
+- Retry support
+- Parallel processing
+- Fault tolerance
