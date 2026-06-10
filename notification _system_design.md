@@ -158,3 +158,103 @@ Advantages:
 - Real-time updates
 - Reduced API polling
 - Better user experience
+
+
+
+
+# Stage 2
+
+## Database Selection
+
+Recommended Database: PostgreSQL
+
+### Why PostgreSQL?
+
+- ACID compliant
+- Reliable transactions
+- Strong indexing support
+- Scales well for notification systems
+- Supports partitioning for large datasets
+
+---
+
+## Database Schema
+
+### Users Table
+
+```sql
+CREATE TABLE users (
+    id UUID PRIMARY KEY,
+    name VARCHAR(100),
+    email VARCHAR(255) UNIQUE
+);
+```
+
+### Notifications Table
+
+```sql
+CREATE TABLE notifications (
+    id UUID PRIMARY KEY,
+    type VARCHAR(50),
+    message TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+### User Notifications Table
+
+```sql
+CREATE TABLE user_notifications (
+    id UUID PRIMARY KEY,
+    user_id UUID REFERENCES users(id),
+    notification_id UUID REFERENCES notifications(id),
+    is_read BOOLEAN DEFAULT FALSE,
+    read_at TIMESTAMP NULL
+);
+```
+
+---
+
+## Queries
+
+### Fetch Notifications
+
+```sql
+SELECT *
+FROM notifications
+ORDER BY created_at DESC;
+```
+
+### Mark Notification As Read
+
+```sql
+UPDATE user_notifications
+SET is_read = TRUE
+WHERE notification_id = 'notification_id';
+```
+
+### Create Notification
+
+```sql
+INSERT INTO notifications(id, type, message)
+VALUES(uuid_generate_v4(), 'Placement', 'CSX Corporation hiring');
+```
+
+---
+
+## Scaling Challenges
+
+### Problems
+
+1. Large notification volume
+2. Slow queries
+3. High storage consumption
+4. Increased read load
+
+### Solutions
+
+1. Indexing on timestamp
+2. Pagination
+3. Table partitioning
+4. Archiving old notifications
+5. Redis caching
